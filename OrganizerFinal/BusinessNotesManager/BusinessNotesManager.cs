@@ -29,10 +29,10 @@ namespace BusinessNotes
 
         #region Методы
         /// <summary>
-        /// Удаляет заметку, если она раньше текущей даты.
+        /// Проверяет дату заметки, наступает ли она позже текущей даты.
         /// </summary>
         /// <param name="note">Заметка.</param>
-        /// <returns>true в случае усеха, иначе false.</returns>
+        /// <returns>true в если дата заметки позже текущей,иначе false.</returns>
         public static bool DispleyDateСheck(Note note)
         {
             int result = DateTime.Compare(DateTime.Today, note.DisplayDate);
