@@ -33,9 +33,9 @@ namespace BusinessNotes
         /// </summary>
         /// <param name="note">Заметка.</param>
         /// <returns>true в если дата заметки позже текущей,иначе false.</returns>
-        public static bool DispleyDateСheck(Note note)
+        public static bool DispleyDateСheck(Note note,DateTime date)
         {
-            int result = DateTime.Compare(DateTime.Today, note.DisplayDate);
+            int result = DateTime.Compare(date, note.DisplayDate);
             if (result == 0)
             {
                 
@@ -52,14 +52,14 @@ namespace BusinessNotes
         /// </summary>
         /// <param name="all">Определяет нужны ли все заметки или только на текущую дату.</param>
         /// <returns>Список заметок.</returns>
-        public List<Note> ListCreate(bool all=false)
+        public List<Note> ListCreate(DateTime date, bool all=false)
         {
             List<Note> myNotes = new List<Note>();            
             foreach (Note note in Notes)
             {
                 if (!all) 
                 {
-                    if (DispleyDateСheck(note))
+                    if (DispleyDateСheck(note,date))
                     {
                         myNotes.Add(note);
                     }

@@ -44,10 +44,10 @@ namespace Organizer
                  {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Создать заметку", "create")
                  },
-            /*new[]
+            new[]
                  {
-                     //Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Редактировать заметку", "update")
-                 },*/
+                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Мой календарь", "calendar")
+                 },
             new[]
                  {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Удалить старые заметки", "deleteAll")
@@ -73,19 +73,19 @@ namespace Organizer
         /// <returns>Возвращает сообщение со списком заметок</returns>
         public async Task NoteAllAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, CancellationToken cancellationToken, bool all = false)
         {
-            DateTime date = (UpdateHandler.CurrentStatus == "date") ? DateTime.Today : Calendar.CurrentDate;
+            DateTime date = (UpdateHandler.CurrentStatus == "date")? DateTime.Today : Calendar.CurrentDate;
             var chatId = update.CallbackQuery.Message.Chat.Id;
             List<Note> myNotes;
             string title;
             string text;
             if (!all)
             {
-                myNotes = businessNotesManager.ListCreate();
-                title = $"Заметки на {DateTime.Today.ToString("d MMMM yyyy")}\n";
+                myNotes = businessNotesManager.ListCreate(date);
+                title = $"Заметки на {date.ToString("d MMMM yyyy")}\n";
             }
             else
             {
-                myNotes = businessNotesManager.ListCreate(all = true);
+                myNotes = businessNotesManager.ListCreate(date,all = true);
                 title = $"Все заметки\n";
             }
             text = title;
@@ -95,9 +95,18 @@ namespace Organizer
                 foreach (var note in myNotes)
                 {                    
                     if (note.UserId == chatId)
-                    {                        
-                        text += $"{i}) {note.Description}\n {note.DisplayDate.ToString("dd.MM.yyyy")}\n\n";
-                        i++;
+                    {
+                        if (all == true)
+                        {
+                            text += $"{i}) {note.Description}\n {note.DisplayDate.ToString("dd.MM.yyyy")}\n\n";
+                            i++;
+                        }
+                        else
+                        {
+                            text += $"{i}) {note.Description}\n\n";
+                            i++;
+                        }
+                        
                     }
 
                 }
@@ -112,17 +121,29 @@ namespace Organizer
             {
                 await botClient.SendMessage(
                 chatId: chatId,
-                    text: "Нет заметок. Для продолжения работы введите команду /menu",
+                text: $"Нет заметок на {date.ToString("d MMMM yyyy")}\n. Для продолжения работы введите команду /menu",
                 cancellationToken: cancellationToken
                 );
             }
+            
         }
+        /// <summary>
+        /// Выводит календарь пользователю.
+        /// </summary>
+        /// <param name="botClient">TG Bot API клиента.</param>
+        /// <param name="update">Объект событие.</param>
+        /// <returns></returns>
+        public async Task GetCalendarAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update,long chatId)
+        {
+            await Calendar.SendCalendarAsync(botClient, chatId, DateTime.Now);
+        }
+        
 
         /// <summary>
         /// Создает новую заметку.
         /// </summary>
         /// <param name="botClient">TG Bot API клиента.</param>
-        /// <param name="update">Тип события.</param>
+        /// <param name="update">Объект событие.</param>
         /// <param name="chatId">Идентификатор чата.</param>
         /// <param name="cancellationToken">Прерывание запроса.</param>
         /// <returns>Сообщение, что заметка создана </returns>
@@ -158,8 +179,8 @@ namespace Organizer
                     cancellationToken: cancellationToken
                     );
                 UpdateHandler.CurrentStatus = string.Empty;
-                UpdateHandler.CurrentMessage = string.Empty;                  
-                              
+                UpdateHandler.CurrentMessage = string.Empty;
+                Calendar.CurrentDate = DateTime.Today;
             }
         }
        
@@ -173,15 +194,15 @@ namespace Organizer
         /// <returns></returns>
         public async Task DeleteNotesAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, long chatId, CancellationToken cancellationToken)
         {
-            bool all;            
-            var myNotes = businessNotesManager.ListCreate(all=true);
+            bool all;
+            DateTime date = DateTime.Today;
+            var myNotes = businessNotesManager.ListCreate(date,all=true);
             string userMessage = $"У вас нет заметок\n Для продолжения работы введите команду /menu";
             if (myNotes.Count > 0)
             {
                 int count = 0;                
                 foreach (var note in myNotes)
-                {
-                    
+                {                    
                     if (note.UserId == chatId)
                     {                        
                         int result = DateTime.Compare(DateTime.Today, note.DisplayDate);
@@ -201,9 +222,7 @@ namespace Organizer
                     {
                         userMessage = "Заметки удалены \n Для продолжения работы введите команду /menu";
                     }
-
-                }
-                            
+                }                            
             }            
             await botClient.SendMessage(
                 chatId: chatId,
