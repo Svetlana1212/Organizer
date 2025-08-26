@@ -73,6 +73,7 @@ namespace Organizer
         /// <returns>Возвращает сообщение со списком заметок</returns>
         public async Task NoteAllAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, CancellationToken cancellationToken, bool all = false)
         {
+            DateTime date = (UpdateHandler.CurrentStatus == "date") ? DateTime.Today : Calendar.CurrentDate;
             var chatId = update.CallbackQuery.Message.Chat.Id;
             List<Note> myNotes;
             string title;
