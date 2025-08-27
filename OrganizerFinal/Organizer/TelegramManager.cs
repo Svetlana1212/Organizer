@@ -34,7 +34,7 @@ namespace Organizer
             var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]{
             new[]
                 {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"Заметки на {DateTime.Today.ToString("dd MM yyyy")} ", "listDay")
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"Заметки на сегодня ({DateTime.Today.ToString("dd MM yyyy")}) ", "listDay")
                 },
             new[]
                  {
@@ -121,7 +121,7 @@ namespace Organizer
             {
                 await botClient.SendMessage(
                 chatId: chatId,
-                text: $"Нет заметок на {date.ToString("d MMMM yyyy")}\n. Для продолжения работы введите команду /menu",
+                text: $"Нет заметок на {date.ToString("d MMMM yyyy")}.\n Для продолжения работы введите команду /menu",
                 cancellationToken: cancellationToken
                 );
             }
