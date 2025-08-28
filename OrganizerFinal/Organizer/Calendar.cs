@@ -73,7 +73,7 @@ public class Calendar
         {            
             string selectedDate = callbackData.Substring(4);            
             CurrentDate = DateTime.Parse(selectedDate);
-            await botClient.EditMessageReplyMarkup(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId,replyMarkup: null);
+            await botClient.EditMessageReplyMarkup(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId,replyMarkup: null);            
         }
         else if (callbackData.StartsWith("next") || callbackData.StartsWith("prev"))
         {

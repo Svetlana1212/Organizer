@@ -48,6 +48,10 @@ namespace Organizer
                  {
                      Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Мой календарь", "calendar")
                  },
+           /* new[]
+                 {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Удалить заметку", "delete")
+                 },*/
             new[]
                  {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Удалить старые заметки", "deleteAll")
@@ -98,7 +102,7 @@ namespace Organizer
                     {
                         if (all == true)
                         {
-                            text += $"{i}) {note.Description}\n {note.DisplayDate.ToString("dd.MM.yyyy")}\n\n";
+                            text += $"{i}) {note.Description}\n дата показа {note.DisplayDate.ToString("dd.MM.yyyy")}  Номер заметки -{note.Id}\n\n";
                             i++;
                         }
                         else
@@ -147,7 +151,7 @@ namespace Organizer
         /// <param name="chatId">Идентификатор чата.</param>
         /// <param name="cancellationToken">Прерывание запроса.</param>
         /// <returns>Сообщение, что заметка создана </returns>
-        public async Task CreateNotesAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, long chatId, CancellationToken cancellationToken)
+        public async Task CreateNoteAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, long chatId, CancellationToken cancellationToken)
         {            
             DateTime date;            
             if (UpdateHandler.CurrentStatus == "text")
@@ -167,7 +171,7 @@ namespace Organizer
                 string finalText;
                 if (businessNotesManager.Add(newNote))
                 {
-                    finalText = "Вы создали заметку.\n Для продолжения работы введите команду /menu";
+                    finalText = $"Вы создали заметку c номером {newNote.Id}.\n Для продолжения работы введите команду /menu";
                 }
                 else
                 {
@@ -183,7 +187,47 @@ namespace Organizer
                 Calendar.CurrentDate = DateTime.Today;
             }
         }
-       
+
+       /* public async Task DeleteNoteAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
+        {
+            long chatId = update.CallbackQuery.Message.Chat.Id;
+            string text=string.Empty;
+             if (UpdateHandler.CurrentStatus == "update")
+             {
+                await botClient.SendMessage(
+                    chatId: chatId,
+                    text: "Введите номер заметки",
+                    cancellationToken: cancellationToken
+                );                
+                UpdateHandler.CurrentStatus = "updateId";
+             }
+             else if(UpdateHandler.CurrentStatus == "updateId")
+             {
+                if(Int32.TryParse(UpdateHandler.CurrentMessage,out int Id))
+                {
+                    var updateNote = businessNotesManager.Search(Id);
+                    businessNotesManager.Delete(updateNote);
+                    text = "Заметка удалена";
+                }
+                else
+                {
+                    text = "Неверный ввод, должно быть целое число";
+                }
+
+             }
+             else
+             {
+                text = "Что-то пошло не так... Попробуйте снова";
+             }
+            await botClient.SendMessage(
+                   chatId: chatId,
+                   text: text,
+                   cancellationToken: cancellationToken
+            );
+            UpdateHandler.CurrentStatus = string.Empty;
+            UpdateHandler.CurrentMessage = string.Empty;
+        }*/
+
         /// <summary>
         /// Удаляет старые заметки.
         /// </summary>

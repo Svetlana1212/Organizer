@@ -105,7 +105,7 @@ namespace Organizer
                                 {
                                     await SendTextMessageAsync(chatId, $"🙌🏿 Добро пожаловать,{user.FirstName}\n\n" +
                                       "Я бот для работы с твоими заметками 😉\n" +
-                                      "Благодаря мне ты не забудешь про свои важные дела,\n встречи и звонки.\n" +
+                                      "Благодаря мне ты не забудешь про свои\n важные дела, встречи и звонки.\n" +
                                       "Ты можешь:\n" +
                                       " * Создавать заметки\n" +
                                       " * Установливать дату для их просмотра\n" +
@@ -122,15 +122,15 @@ namespace Organizer
                                 }
                                 else if ((CurrentStatus == "date") && (CurrentMessage != text))
                                 {
-                                    //await Calendar.SendCalendarAsync(botClient, message.Chat.Id, DateTime.Now);
+                                    
                                     telegramManager.GetCalendarAsync(botClient, update, chatId);
-                                    telegramManager.CreateNotesAsync(botClient, update, chatId, cancellationToken);
+                                    telegramManager.CreateNoteAsync(botClient, update, chatId, cancellationToken);
                                     CurrentMessage = message.Text;
                                 }
                                 else if ((CurrentStatus == "newNote") && (message.Text == BotChatCommands.Ok))
                                 {
-                                    telegramManager.CreateNotesAsync(botClient, update, chatId, cancellationToken);
-                                }                                
+                                    telegramManager.CreateNoteAsync(botClient, update, chatId, cancellationToken);
+                                }                                                             
                                 else
                                 {
                                     await botClient.SendMessage(
@@ -166,12 +166,12 @@ namespace Organizer
 
                                 case "create":                                                                     
                                     CurrentStatus = "text";                                    
-                                    telegramManager.CreateNotesAsync(botClient, update,chat.Id, cancellationToken);
+                                    telegramManager.CreateNoteAsync(botClient, update,chat.Id, cancellationToken);
                                     break;
 
                                 case "deleteAll":                                                                    
                                     telegramManager.DeleteNotesAsync(botClient, update, chat.Id, cancellationToken);
-                                    break;
+                                    break;                              
 
                                 case "day":
                                     calendar.HandleCalendarCallback(botClient, callbackQuery);
