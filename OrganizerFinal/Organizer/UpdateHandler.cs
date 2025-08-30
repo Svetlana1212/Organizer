@@ -41,15 +41,17 @@ namespace Organizer
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
 
+
         /// <summary>
-        /// Проверяет была ли запущена команда /create
+        /// Записывает текущий статус пользователя.
         /// </summary>
-        public static bool create;
+        public static Dictionary<string, string> CurrentStatus=new Dictionary<string, string>();
 
+        /// <summary>
+        /// Записывает текущее сообщение пользователя.
+        /// </summary>
+        public static Dictionary<string, string> CurrentMessage = new Dictionary<string, string>();  
         
-        public static string CurrentMessage { get; set; }
-        public static string CurrentStatus { get; set; }
-
         TelegramManager telegramManager = new TelegramManager();
         Calendar calendar = new Calendar();
 
@@ -87,7 +89,7 @@ namespace Organizer
         #region <IUpdateHandler>
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            LogUpdate(update);
+            LogUpdate(update);            
             try
             {
                 switch (update.Type)
@@ -98,7 +100,7 @@ namespace Organizer
                             var chatId = message.Chat.Id;
                             var text = message.Text;
                             var user = message.From;
-
+                            
                             if (message.Type == MessageType.Text && !string.IsNullOrEmpty(text))
                             {
                                 if (text == BotChatCommands.Start)
@@ -111,26 +113,36 @@ namespace Organizer
                                       " * Установливать дату для их просмотра\n" +
                                       " * Просматривать заметки на любую дату\n", cancellationToken);
                                     telegramManager.MenuOutput(botClient,update, cancellationToken);
-                                }
+                                }                                
                                 else if (text == BotChatCommands.Menu)
                                 {
                                     telegramManager.MenuOutput(botClient, update, cancellationToken);
-                                }
-                                else if (CurrentStatus == "text")
+                                }                                
+                                else if (CurrentStatus.ContainsKey(chatId.ToString()))                                   
                                 {
-                                    CurrentMessage = message.Text;
-                                }
-                                else if ((CurrentStatus == "date") && (CurrentMessage != text))
-                                {
-                                    
-                                    telegramManager.GetCalendarAsync(botClient, update, chatId);
-                                    telegramManager.CreateNoteAsync(botClient, update, chatId, cancellationToken);
-                                    CurrentMessage = message.Text;
-                                }
-                                else if ((CurrentStatus == "newNote") && (message.Text == BotChatCommands.Ok))
-                                {
-                                    telegramManager.CreateNoteAsync(botClient, update, chatId, cancellationToken);
-                                }                                                             
+                                    Console.WriteLine("new status");
+                                    Console.WriteLine(CurrentStatus[chatId.ToString()]);
+                                    if (CurrentStatus[chatId.ToString()] == "text")
+                                    {                                        
+                                        CurrentMessage[chatId.ToString()] = message.Text;                                       
+                                    }
+                                    else if((CurrentStatus[chatId.ToString()] == "date")) //&& (CurrentMessage.ContainsKey(chatId.ToString())))
+                                    {
+                                        /*if (CurrentMessage[chatId.ToString()] != text)
+                                        {*/
+                                            Console.WriteLine("Hello date");
+                                            telegramManager.GetCalendarAsync(botClient, update, chatId);
+                                            telegramManager.CreateNoteAsync(botClient, update, chatId, cancellationToken);
+                                            CurrentMessage[chatId.ToString()] = message.Text;
+                                            Console.WriteLine(CurrentMessage[chatId.ToString()]);
+                                        //}
+                                        
+                                    }
+                                    else if ((CurrentStatus[chatId.ToString()] == "newNote") && (message.Text == BotChatCommands.Ok))
+                                    {
+                                        telegramManager.CreateNoteAsync(botClient, update, chatId, cancellationToken);
+                                    }
+                                }                                                                                        
                                 else
                                 {
                                     await botClient.SendMessage(
@@ -155,17 +167,20 @@ namespace Organizer
 
                             switch (action)
                             {
-                                case "listDay":                                    
+                                case "listDay":
+                                    Calendar.CurrentDate[chat.Id.ToString()] = DateTime.Today;
                                     telegramManager.NoteAllAsync(botClient,update, cancellationToken);
                                     break;
 
                                 case "listAll":                                    
                                     bool all = true;
+                                    Calendar.CurrentDate[chat.Id.ToString()] = DateTime.Today;
                                     telegramManager.NoteAllAsync(botClient, update,cancellationToken, all);
                                     break;
 
-                                case "create":                                                                     
-                                    CurrentStatus = "text";                                    
+                                case "create":
+                                    CurrentStatus[chat.Id.ToString()]="text";
+                                    Console.WriteLine(CurrentStatus[chat.Id.ToString()]);
                                     telegramManager.CreateNoteAsync(botClient, update,chat.Id, cancellationToken);
                                     break;
 
@@ -174,19 +189,20 @@ namespace Organizer
                                     break;                              
 
                                 case "day":
+                                    Console.WriteLine(CurrentStatus[chat.Id.ToString()]);
                                     calendar.HandleCalendarCallback(botClient, callbackQuery);
-                                    if (CurrentStatus == "date")
-                                    {
-                                        CurrentStatus = "newNote";
+                                    if (CurrentStatus[chat.Id.ToString()] == "date")
+                                    {                                        
+                                        CurrentStatus[chat.Id.ToString()]="newNote";
                                         await botClient.SendMessage(
                                         chatId: chat.Id,
-                                        text: $"Вы выбрали дату {Calendar.CurrentDate.ToString("dd MM yyyy")}\n Введите команду /ok"
+                                        text: $"Вы выбрали дату {Calendar.CurrentDate[chat.Id.ToString()].ToString("dd MM yyyy")}\n Введите команду /ok"
                                         );
                                     }                                   
                                     else
                                     {
                                         telegramManager.NoteAllAsync(botClient, update, cancellationToken);
-                                        Calendar.CurrentDate = DateTime.Today;
+                                        Calendar.CurrentDate[chat.Id.ToString()] = DateTime.Today;
                                     }
                                     break;
 

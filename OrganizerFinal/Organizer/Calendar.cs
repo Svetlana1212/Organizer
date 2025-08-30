@@ -13,7 +13,8 @@ public class Calendar
     /// <summary>
     /// Записывает выбранную пользователем дату.
     /// </summary>
-    public static DateTime CurrentDate = DateTime.Today;
+    public static Dictionary<string,DateTime> CurrentDate= new Dictionary<string, DateTime>();
+    
     #endregion
 
     #region Методы
@@ -69,10 +70,11 @@ public class Calendar
     public async void HandleCalendarCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
         string callbackData = callbackQuery.Data;
+        long chatId = callbackQuery.Message.Chat.Id;
         if (callbackData.StartsWith("day"))
         {            
             string selectedDate = callbackData.Substring(4);            
-            CurrentDate = DateTime.Parse(selectedDate);
+            CurrentDate[chatId.ToString()]=DateTime.Parse(selectedDate);
             await botClient.EditMessageReplyMarkup(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId,replyMarkup: null);            
         }
         else if (callbackData.StartsWith("next") || callbackData.StartsWith("prev"))
@@ -112,7 +114,6 @@ public class Calendar
     /// <returns>Календарь.</returns>
     public static async Task SendCalendarAsync(ITelegramBotClient botClient, long chatId, DateTime initialDate, string messageText = "Выберите дату:")
     {
-        
         InlineKeyboardMarkup calendarKeyboard = GenerateCalendar(initialDate);
         await botClient.SendMessage(
             chatId: chatId,

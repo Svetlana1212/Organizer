@@ -22,6 +22,7 @@ namespace Organizer
         BusinessNotesManager businessNotesManager = new BusinessNotesManager();
 
         #region Методы
+        
         /// <summary>
         /// Выводит меню.
         /// </summary>
@@ -30,7 +31,7 @@ namespace Organizer
         /// <param name="cancellationToken">Прерывание запроса.</param>
         public async void MenuOutput(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
         {
-            var chatId = update.Message.Chat.Id;
+            var chatId = update.Message.Chat.Id;           
             var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]{
             new[]
                 {
@@ -77,8 +78,12 @@ namespace Organizer
         /// <returns>Возвращает сообщение со списком заметок</returns>
         public async Task NoteAllAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, CancellationToken cancellationToken, bool all = false)
         {
-            DateTime date = (UpdateHandler.CurrentStatus == "date")? DateTime.Today : Calendar.CurrentDate;
+            
             var chatId = update.CallbackQuery.Message.Chat.Id;
+            Console.WriteLine(chatId);
+            //Console.WriteLine(UpdateHandler.CurrentStatus[chatId.ToString()]);
+            DateTime date = (UpdateHandler.CurrentStatus[chatId.ToString()] == "date") ? DateTime.Today : Calendar.CurrentDate[chatId.ToString()];
+            Console.WriteLine(date);
             List<Note> myNotes;
             string title;
             string text;
@@ -123,9 +128,10 @@ namespace Organizer
             }
             else
             {
+                text = $"Нет заметок на {date.ToString("d MMMM yyyy")}.\n Для продолжения работы введите команду /menu";
                 await botClient.SendMessage(
                 chatId: chatId,
-                text: $"Нет заметок на {date.ToString("d MMMM yyyy")}.\n Для продолжения работы введите команду /menu",
+                text: text,//$"Нет заметок на {date.ToString("d MMMM yyyy")}.\n Для продолжения работы введите команду /menu",
                 cancellationToken: cancellationToken
                 );
             }
@@ -139,6 +145,7 @@ namespace Organizer
         /// <returns></returns>
         public async Task GetCalendarAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update,long chatId)
         {
+            Console.WriteLine("Hello");
             await Calendar.SendCalendarAsync(botClient, chatId, DateTime.Now);
         }
         
@@ -154,19 +161,21 @@ namespace Organizer
         public async Task CreateNoteAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, long chatId, CancellationToken cancellationToken)
         {            
             DateTime date;            
-            if (UpdateHandler.CurrentStatus == "text")
+            if (UpdateHandler.CurrentStatus[chatId.ToString()] == "text")
             {
                 await botClient.SendMessage(
                 chatId: chatId,
                 text: "Введите текст заметки",
                 cancellationToken: cancellationToken
                 );
-                UpdateHandler.CurrentStatus = "date";
+                UpdateHandler.CurrentStatus[chatId.ToString()]="date";
+                //Console.WriteLine(UpdateHandler.CurrentStatus[chatId.ToString()]);
             }
-            else if (UpdateHandler.CurrentStatus == "newNote")
-            {              
-                string description = UpdateHandler.CurrentMessage;
-                Note newNote = new Note(description, Calendar.CurrentDate);
+            else if (UpdateHandler.CurrentStatus[chatId.ToString()] == "newNote")
+            {
+                Console.WriteLine("Hello");
+                string description = UpdateHandler.CurrentMessage[chatId.ToString()];
+                Note newNote = new Note(description, Calendar.CurrentDate[chatId.ToString()]);
                 newNote.UserId = chatId;
                 string finalText;
                 if (businessNotesManager.Add(newNote))
@@ -182,9 +191,9 @@ namespace Organizer
                     text: finalText,
                     cancellationToken: cancellationToken
                     );
-                UpdateHandler.CurrentStatus = string.Empty;
-                UpdateHandler.CurrentMessage = string.Empty;
-                Calendar.CurrentDate = DateTime.Today;
+                UpdateHandler.CurrentStatus[chatId.ToString()]="no status";                
+                UpdateHandler.CurrentMessage[chatId.ToString()]="no message";                
+                Calendar.CurrentDate[chatId.ToString()] = DateTime.Today;
             }
         }
 
