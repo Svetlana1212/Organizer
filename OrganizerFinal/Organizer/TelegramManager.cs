@@ -82,7 +82,14 @@ namespace Organizer
             var chatId = update.CallbackQuery.Message.Chat.Id;
             Console.WriteLine(chatId);
             //Console.WriteLine(UpdateHandler.CurrentStatus[chatId.ToString()]);
-            DateTime date = (UpdateHandler.CurrentStatus[chatId.ToString()] == "date") ? DateTime.Today : Calendar.CurrentDate[chatId.ToString()];
+            DateTime date = DateTime.Today;
+            if (UpdateHandler.CurrentStatus.ContainsKey(chatId.ToString()))
+            {
+                if (UpdateHandler.CurrentStatus[chatId.ToString()] == "date")
+                {
+                    date = Calendar.CurrentDate[chatId.ToString()];
+                }
+            }            
             Console.WriteLine(date);
             List<Note> myNotes;
             string title;
