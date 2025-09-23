@@ -73,8 +73,15 @@ public class Calendar
         long chatId = callbackQuery.Message.Chat.Id;
         if (callbackData.StartsWith("day"))
         {            
-            string selectedDate = callbackData.Substring(4);            
-            CurrentDate[chatId.ToString()]=DateTime.Parse(selectedDate);
+            string selectedDate = callbackData.Substring(4);
+            if (CurrentDate.ContainsKey(chatId.ToString()))
+            {
+                CurrentDate[chatId.ToString()] = DateTime.Parse(selectedDate);
+            }else 
+            {                
+                CurrentDate.Add(chatId.ToString(), DateTime.Parse(selectedDate));                
+            }
+                            
             await botClient.EditMessageReplyMarkup(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId,replyMarkup: null);            
         }
         else if (callbackData.StartsWith("next") || callbackData.StartsWith("prev"))

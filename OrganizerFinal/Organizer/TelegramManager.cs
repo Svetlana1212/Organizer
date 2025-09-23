@@ -77,20 +77,17 @@ namespace Organizer
         /// <param name="all">Параметр,определяющий нужен ли полный список.</param>
         /// <returns>Возвращает сообщение со списком заметок</returns>
         public async Task NoteAllAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update, CancellationToken cancellationToken, bool all = false)
-        {
+        {            
+            var chatId = update.CallbackQuery.Message.Chat.Id;           
+            DateTime date =(!Calendar.CurrentDate.ContainsKey(chatId.ToString()))? DateTime.Today:Calendar.CurrentDate[chatId.ToString()];
             
-            var chatId = update.CallbackQuery.Message.Chat.Id;
-            Console.WriteLine(chatId);
-            //Console.WriteLine(UpdateHandler.CurrentStatus[chatId.ToString()]);
-            DateTime date = DateTime.Today;
             if (UpdateHandler.CurrentStatus.ContainsKey(chatId.ToString()))
             {
                 if (UpdateHandler.CurrentStatus[chatId.ToString()] == "date")
                 {
                     date = Calendar.CurrentDate[chatId.ToString()];
                 }
-            }            
-            Console.WriteLine(date);
+            } 
             List<Note> myNotes;
             string title;
             string text;
@@ -138,7 +135,7 @@ namespace Organizer
                 text = $"Нет заметок на {date.ToString("d MMMM yyyy")}.\n Для продолжения работы введите команду /menu";
                 await botClient.SendMessage(
                 chatId: chatId,
-                text: text,//$"Нет заметок на {date.ToString("d MMMM yyyy")}.\n Для продолжения работы введите команду /menu",
+                text: text,
                 cancellationToken: cancellationToken
                 );
             }
@@ -152,7 +149,6 @@ namespace Organizer
         /// <returns></returns>
         public async Task GetCalendarAsync(ITelegramBotClient botClient, Telegram.Bot.Types.Update update,long chatId)
         {
-            Console.WriteLine("Hello");
             await Calendar.SendCalendarAsync(botClient, chatId, DateTime.Now);
         }
         
@@ -175,12 +171,10 @@ namespace Organizer
                 text: "Введите текст заметки",
                 cancellationToken: cancellationToken
                 );
-                UpdateHandler.CurrentStatus[chatId.ToString()]="date";
-                //Console.WriteLine(UpdateHandler.CurrentStatus[chatId.ToString()]);
+                UpdateHandler.CurrentStatus[chatId.ToString()]="date";                
             }
             else if (UpdateHandler.CurrentStatus[chatId.ToString()] == "newNote")
-            {
-                Console.WriteLine("Hello");
+            {                
                 string description = UpdateHandler.CurrentMessage[chatId.ToString()];
                 Note newNote = new Note(description, Calendar.CurrentDate[chatId.ToString()]);
                 newNote.UserId = chatId;
@@ -199,8 +193,8 @@ namespace Organizer
                     cancellationToken: cancellationToken
                     );
                 UpdateHandler.CurrentStatus[chatId.ToString()]="no status";                
-                UpdateHandler.CurrentMessage[chatId.ToString()]="no message";                
-                Calendar.CurrentDate[chatId.ToString()] = DateTime.Today;
+                UpdateHandler.CurrentMessage[chatId.ToString()]="no message";
+                //Calendar.CurrentDate[chatId.ToString()] = DateTime.Today;
             }
         }
 
